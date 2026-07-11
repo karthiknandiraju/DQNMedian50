@@ -1,17 +1,35 @@
-Captured: 2026-07-11T14:43:06+00:00
+Captured: 2026-07-11T14:52:40+00:00
 
-Python
+===== CARLA VERSION =====
+Expected CARLA version: 0.9.14
+CARLA installation directory: /workspace/CARLA_0.9.14
+drwxrwxr-x 1 carla carla 4096 Jul  3 07:20 /workspace/CARLA_0.9.14
+
+===== CARLA PYTHON API =====
+CARLA module path: /workspace/CARLA_0.9.14/PythonAPI/carla/dist/carla-0.9.14-py3.7-linux-x86_64.egg/carla/__init__.py
+CARLA client API imported successfully
+
+===== CARLA SERVER FILES =====
+/workspace/CARLA_0.9.14/CarlaUE4
+/workspace/CARLA_0.9.14/CarlaUE4.sh
+
+===== PYTHON =====
 Python 3.7.17
-/workspace/highway/highway_py37_env/bin/python
+/usr/local/bin/python3.7
+Virtual environment: unknown
 
-Pip
-pip 23.3.2 from /workspace/highway/highway_py37_env/lib/python3.7/site-packages/pip (python 3.7)
+===== PIP =====
+pip 24.0 from /usr/local/lib/python3.7/site-packages/pip (python 3.7)
 
-Virtual Environment
-VIRTUAL_ENV=/workspace/highway/highway_py37_env
+===== PYTORCH =====
+PyTorch version: 1.13.1+cu117
+PyTorch CUDA version: 11.7
+CUDA available: True
+GPU: NVIDIA RTX 6000 Ada Generation
+GPU count: 1
 
-CUDA
-Sat Jul 11 14:43:06 2026       
+===== NVIDIA GPU =====
+Sat Jul 11 14:52:42 2026       
 +-----------------------------------------------------------------------------------------+
 | NVIDIA-SMI 550.127.05             Driver Version: 550.127.05     CUDA Version: 12.4     |
 |-----------------------------------------+------------------------+----------------------+
@@ -20,7 +38,7 @@ Sat Jul 11 14:43:06 2026
 |                                         |                        |               MIG M. |
 |=========================================+========================+======================|
 |   0  NVIDIA RTX 6000 Ada Gene...    On  |   00000000:C1:00.0 Off |                  Off |
-| 30%   37C    P2            117W /  300W |    6250MiB /  49140MiB |     34%      Default |
+| 30%   37C    P2            121W /  300W |    5343MiB /  49140MiB |     42%      Default |
 |                                         |                        |                  N/A |
 +-----------------------------------------+------------------------+----------------------+
                                                                                          
@@ -31,10 +49,26 @@ Sat Jul 11 14:43:06 2026
 |=========================================================================================|
 +-----------------------------------------------------------------------------------------+
 
-OS
+===== CUDA TOOLKIT =====
+nvcc is not installed or not in PATH
+
+===== OPERATING SYSTEM =====
+PRETTY_NAME="Ubuntu 24.04.1 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04.1 LTS (Noble Numbat)"
+VERSION_CODENAME=noble
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=noble
+LOGO=ubuntu-logo
 Linux 9ac5423e3781 6.8.0-52-generic #53~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Wed Jan 15 19:18:46 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
 
-CPU
+===== CPU =====
 Architecture:                         x86_64
 CPU op-mode(s):                       32-bit, 64-bit
 Address sizes:                        48 bits physical, 48 bits virtual
@@ -50,7 +84,7 @@ Core(s) per socket:                   32
 Socket(s):                            2
 Stepping:                             1
 Frequency boost:                      enabled
-CPU(s) scaling MHz:                   53%
+CPU(s) scaling MHz:                   47%
 CPU max MHz:                          4041.8450
 CPU min MHz:                          1500.0000
 BogoMIPS:                             5900.42
@@ -78,12 +112,12 @@ Vulnerability Spectre v2:             Mitigation; Retpolines; IBPB conditional; 
 Vulnerability Srbds:                  Not affected
 Vulnerability Tsx async abort:        Not affected
 
-Memory
+===== MEMORY =====
                total        used        free      shared  buff/cache   available
-Mem:           503Gi        85Gi        77Gi       1.6Gi       347Gi       418Gi
+Mem:           503Gi        81Gi        81Gi       1.6Gi       347Gi       421Gi
 Swap:             0B          0B          0B
 
-Disk
+===== DISK =====
 Filesystem                   Size  Used Avail Use% Mounted on
 overlay                      100G   52G   49G  52% /
 tmpfs                         64M     0   64M   0% /dev
@@ -101,10 +135,11 @@ tmpfs                        252G     0  252G   0% /proc/scsi
 tmpfs                        252G     0  252G   0% /sys/firmware
 tmpfs                        252G     0  252G   0% /sys/devices/virtual/powercap
 
-CARLA
-No module named 'carla'
+===== PYTHONPATH =====
+/workspace/CARLA_0.9.14/PythonAPI/carla/dist/carla-0.9.14-py3.7-linux-x86_64.egg:/workspace:
 
-PyTorch
-Torch: 1.13.1+cu117
-CUDA: True
-NVIDIA RTX 6000 Ada Generation
+===== CARLA PROCESS =====
+root       84439  0.0  0.0   4336  2052 pts/36   S    03:11   0:00 su -s /bin/bash carla -c  cd /workspace/CARLA_0.9.14 && xvfb-run -a ./CarlaUE4.sh \   -opengl \   -RenderOffScreen \   -nosound \   -quality-level=Low \   -benchmark \   -fps=10 
+carla      84440  0.0  0.0   2804  1028 ?        Ss   03:11   0:00 /bin/sh /usr/bin/xvfb-run -a ./CarlaUE4.sh -opengl -RenderOffScreen -nosound -quality-level=Low -benchmark -fps=10
+carla      84453  0.0  0.0   2804  1036 ?        S    03:11   0:00 /bin/sh ./CarlaUE4.sh -opengl -RenderOffScreen -nosound -quality-level=Low -benchmark -fps=10
+carla      84460  429  0.7 16608568 3973396 ?    Rl   03:11 3011:20 /workspace/CARLA_0.9.14/CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping CarlaUE4 -opengl -RenderOffScreen -nosound -quality-level=Low -benchmark -fps=10

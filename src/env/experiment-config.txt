@@ -1,0 +1,43 @@
+CARLA DQN Experiment Configuration
+==================================
+
+CARLA Version: 0.9.14
+
+Experiments:
+1. Epsilon Greedy
+2. Median First
+3. Median 50
+4. Ensemble
+
+Algorithm:
+DQN + RND + Count-Based Exploration
+Target Network
+Replay Buffer
+Adam Optimizer
+
+Training Episodes: 500
+Testing Episodes: 300
+Maximum Episode Steps: 500
+
+Learning Rate: 5e-5
+Epsilon: 0.2
+Gamma: 0.99
+Batch Size: 64
+Replay Capacity: 50000
+Target Update Interval: 1000
+
+RND Beta: 0.01
+RND Learning Rate: 1e-4
+RND Output Size: 64
+
+Count Beta: 0.05
+Count State Bin Size: 1.0
+
+Realistic Traffic: Enabled
+Traffic Vehicles: 2
+Pedestrians: 2
+
+Device: CUDA
+Seed: 42
+Convergence Threshold: 0.95
+Convergence Window: 10
