@@ -4,9 +4,7 @@ SUMO set4_v2 DQN experiment matched to the CARLA set4_v2 structure.
 
 Experiments, in strict order:
   1. Epsilon Greedy
-  2. Median First
-  3. Median 50
-  4. Ensemble, trained only after the first three finish
+  2. Median 50
 
 Neural setup for every experiment:
   DQN + RND + Count-Based intrinsic reward + target network
@@ -14,8 +12,7 @@ Neural setup for every experiment:
 
 Testing:
   - Networks frozen
-  - Greedy argmax actions only for base experiments
-  - Ensemble uses frozen expert actions
+  - Greedy argmax actions during testing
   - No optimizer, replay, RND, count, or target updates
   - Environment reward only
 
@@ -63,15 +60,11 @@ except Exception:
     psutil = None
 
 
-BASE_EXPERIMENTS = ["standard_epsilon", "median_50_first", "median_50"]
-ENSEMBLE_EXPERIMENTS = ["ensemble_epsilon_medianfirst_median50"]
-EXPERIMENTS = BASE_EXPERIMENTS + ENSEMBLE_EXPERIMENTS
+EXPERIMENTS = ["standard_epsilon", "median_50"]
 
 SHORT_LABELS = {
-    "standard_epsilon": "Epsilon",
-    "median_50_first": "Median First",
+    "standard_epsilon": "Epsilon Greedy",
     "median_50": "Median 50",
-    "ensemble_epsilon_medianfirst_median50": "Ensemble",
 }
 
 
@@ -868,50 +861,9 @@ def base_action(
             )
         return agent.best_action(state), "greedy"
 
-    if experiment == "median_50_first":
-        exploration_episodes = int(
-            round(args.epsilon * args.train_episodes)
-        )
-        if episode < exploration_episodes:
-            return (
-                median50_action(agent, state, actions),
-                "median_first_phase",
-            )
-        return agent.best_action(state), "greedy"
-
     raise ValueError(experiment)
 
 
-def expert_actions(state, experts):
-    output = []
-    seen = set()
-    for name, agent in experts:
-        action = int(agent.best_action(state))
-        if action not in seen:
-            output.append((action, name, agent))
-            seen.add(action)
-    return output
-
-
-def ensemble_action(
-    state,
-    own_agent: RNDCountDQNAgent,
-    experts,
-) -> Tuple[int, str]:
-    """Average Q-values from all frozen experts and the trainable own agent.
-
-    This is a true Q-value ensemble rather than using experts only to propose
-    candidate actions.
-    """
-    q_values = [
-        agent.get_q_values(state)
-        for _, agent in experts
-    ]
-    q_values.append(own_agent.get_q_values(state))
-
-    mean_q = np.mean(np.stack(q_values, axis=0), axis=0)
-    action = int(np.argmax(mean_q))
-    return action, "ensemble_q_average"
 
 
 # ---------------------------------------------------------------------
@@ -1149,21 +1101,14 @@ def train_one(
         gpu_timer = make_gpu_timer(args.device)
 
         while not done:
-            if experiment in BASE_EXPERIMENTS:
-                action, source = base_action(
-                    experiment,
-                    agent,
-                    state,
-                    episode,
-                    args,
-                    actions,
-                )
-            else:
-                action, source = ensemble_action(
-                    state,
-                    agent,
-                    experts or [],
-                )
+            action, source = base_action(
+                experiment,
+                agent,
+                state,
+                episode,
+                args,
+                actions,
+            )
 
             source_counts[source] = (
                 source_counts.get(source, 0) + 1
@@ -1459,15 +1404,8 @@ def test_one(
             gpu_timer = make_gpu_timer(args.device)
 
             while not done:
-                if experiment in ENSEMBLE_EXPERIMENTS:
-                    action, source = ensemble_action(
-                        state,
-                        agent,
-                        experts or [],
-                    )
-                else:
-                    action = agent.best_action(state)
-                    source = "frozen_greedy"
+                action = agent.best_action(state)
+                source = "frozen_greedy"
 
                 source_counts[source] = (
                     source_counts.get(source, 0) + 1
@@ -1863,10 +1801,6 @@ def save_figure(
         output_dir / f"{name}.png",
         bbox_inches="tight",
     )
-    figure.savefig(
-        output_dir / f"{name}.pdf",
-        bbox_inches="tight",
-    )
     plt.close(figure)
 
 
@@ -1947,7 +1881,7 @@ def make_figures(
             row["test_rewards"]
             for row in result_rows
         ],
-        labels=labels,
+        tick_labels=labels,
         showfliers=True,
     )
     axis.set_ylabel("Environment reward")
@@ -2084,9 +2018,7 @@ def write_readme(
 
 Experiments in order:
 1. Epsilon Greedy
-2. Median First
-3. Median 50
-4. Ensemble
+2. Median 50
 
 Neural setup:
 DQN + RND + Count-Based intrinsic reward
@@ -2110,7 +2042,6 @@ Main CSVs:
 
 Figures:
 - figures_ieee/*.png
-- figures_ieee/*.pdf
 
 Configuration:
 train_episodes={args.train_episodes}
@@ -2156,7 +2087,7 @@ def run(args) -> None:
     )
     print(
         "Experiments: "
-        "Epsilon, Median First, Median 50, Ensemble",
+        "Epsilon Greedy, Median 50",
         flush=True,
     )
     print(
@@ -2193,7 +2124,7 @@ def run(args) -> None:
     all_runtime_rows = []
     results = []
 
-    for experiment in BASE_EXPERIMENTS:
+    for experiment in EXPERIMENTS:
         (
             agent,
             rewards,
@@ -2208,62 +2139,14 @@ def run(args) -> None:
         )
 
         trained[experiment] = agent
-        train_rewards_by_experiment[
-            experiment
-        ] = rewards
-        train_rows_by_experiment[
-            experiment
-        ] = rows
+        train_rewards_by_experiment[experiment] = rewards
+        train_rows_by_experiment[experiment] = rows
 
         all_train_rows.extend(rows)
         all_block_rows.extend(blocks)
         all_runtime_rows.append(runtime)
 
-        trained[
-            experiment
-        ].freeze_for_eval()
-
-    experts = [
-        (experiment, trained[experiment])
-        for experiment in BASE_EXPERIMENTS
-    ]
-
-    ensemble_experiment = (
-        "ensemble_epsilon_medianfirst_median50"
-    )
-    (
-        ensemble_agent,
-        ensemble_rewards,
-        ensemble_rows,
-        ensemble_blocks,
-        ensemble_runtime,
-    ) = train_one(
-        ensemble_experiment,
-        learning_rate,
-        args,
-        output_dir,
-        experts=experts,
-    )
-
-    trained[
-        ensemble_experiment
-    ] = ensemble_agent
-    train_rewards_by_experiment[
-        ensemble_experiment
-    ] = ensemble_rewards
-    train_rows_by_experiment[
-        ensemble_experiment
-    ] = ensemble_rows
-
-    all_train_rows.extend(
-        ensemble_rows
-    )
-    all_block_rows.extend(
-        ensemble_blocks
-    )
-    all_runtime_rows.append(
-        ensemble_runtime
-    )
+        trained[experiment].freeze_for_eval()
 
     for experiment in EXPERIMENTS:
         (
@@ -2276,33 +2159,17 @@ def run(args) -> None:
             args,
             learning_rate,
             output_dir,
-            experts=(
-                experts
-                if experiment
-                in ENSEMBLE_EXPERIMENTS
-                else None
-            ),
         )
 
-        all_test_rows.extend(
-            test_rows
-        )
-        all_block_rows.extend(
-            test_blocks
-        )
-        all_runtime_rows.append(
-            test_runtime
-        )
+        all_test_rows.extend(test_rows)
+        all_block_rows.extend(test_blocks)
+        all_runtime_rows.append(test_runtime)
 
         results.append(
             summarize(
                 experiment,
-                train_rewards_by_experiment[
-                    experiment
-                ],
-                train_rows_by_experiment[
-                    experiment
-                ],
+                train_rewards_by_experiment[experiment],
+                train_rows_by_experiment[experiment],
                 test_rows,
                 args,
                 learning_rate,
@@ -2481,3 +2348,4 @@ def parse_args():
 
 if __name__ == "__main__":
     run(parse_args())
+
